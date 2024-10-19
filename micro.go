@@ -343,7 +343,7 @@ func nullControl(db *sql.DB) {
 
 func main() {
 	// PostgreSQL bağlantısını ayarlıyoruz
-	connStr := "host=89.252.131.214 user=postgres password=Washere.123 dbname=wllt port=5432 sslmode=disable"
+	connStr := DBADDRESS
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatalf("Veritabanı bağlantı hatası: %v", err)
