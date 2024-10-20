@@ -70,8 +70,4 @@ func AutoPrice(db *sql.DB) {
 	// İşlem süresini hesapla
 	duration := time.Since(startTime)
 	fmt.Printf("İşlem süresi: %d dakika %d saniye.\n", int(duration.Minutes()), int(duration.Seconds())%60)
-
-	// 2 dakika sonra tekrar çalıştır
-	time.Sleep(2 * time.Minute)
-	AutoPrice(db) // Kendini tekrar çağır
 }
