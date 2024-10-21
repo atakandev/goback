@@ -4,10 +4,9 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-
-	//"time"
 	"log"
 	"strconv"
+	"time"
 )
 
 type Token struct {
@@ -28,6 +27,7 @@ type Tokens struct {
 }
 
 func UpdateWallets(db *sql.DB) error {
+	startTime := time.Now()
 	client := db // db bağlantısını kullanıyoruz
 
 	walletQuery := `SELECT wallet, tokens FROM wallets`
@@ -53,8 +53,6 @@ func UpdateWallets(db *sql.DB) error {
 			log.Fatalf("Error unmarshalling tokens: %v", err)
 			return err
 		}
-
-		fmt.Println(wallet.Wallet, "başlanıyor....")
 		portfolioTotalUsd := 0.0
 		for _, token := range wallet.Tokens.Portfolio {
 			if token.TokenAmount == "0" {
@@ -68,26 +66,26 @@ func UpdateWallets(db *sql.DB) error {
 			}
 			portfolioTotalUsd += nowPrice * parseFloat(token.TokenAmount)
 		}
-		formattedTotal := formatNumber(portfolioTotalUsd)
-		fmt.Println("total token usd:", formattedTotal)
-		// Tarih bilgisi alalım (örneğin, güncel tarih)
-		//currentDate := time.Now().Format("2006-01-02 15:04:05")
-		//
-		//// Güncelleme sorgusu
-		//updateHistoryQuery := `
-		//	UPDATE wallets
-		//	SET historyTokenBalance = COALESCE(
-		//		historyTokenBalance || jsonb_build_array(jsonb_build_object('price', to_json($1::numeric), 'date', to_json($2::text))),
-		//		jsonb_build_array(jsonb_build_object('price', to_json($1::numeric), 'date', to_json($2::text)))
-		//	)
-		//	WHERE wallet = $3`
-		//
-		//_, err = client.Exec(updateHistoryQuery, portfolioTotalUsd, currentDate, wallet.Wallet)
-		//if err != nil {
-		//	log.Printf("Error updating wallet history for %s: %v", wallet.Wallet, err)
-		//}
-	}
+		// Tarih bilgisi
+		currentDate := time.Now().Format("2006-01-02T15:04:05Z07:00") // ISO 8601 formatında tarih
+		price := portfolioTotalUsd                                    // Burada istediğiniz fiyatı kullanabilirsiniz
 
+		// Güncelleme sorgusu
+		updateHistoryQuery := `
+	UPDATE wallets
+	SET  historytokenbalance = COALESCE(
+		        historytokenbalance || jsonb_build_array(jsonb_build_object('price', to_json($1::numeric), 'date', to_json($2::text))),
+		        jsonb_build_array(jsonb_build_object('price', to_json($1::numeric), 'date', to_json($2::text)))
+		    )
+	WHERE wallet = $3`
+
+		_, err = client.Exec(updateHistoryQuery, price, currentDate, wallet.Wallet)
+		if err != nil {
+			log.Printf("Error updating wallet history for %s: %v", wallet.Wallet, err)
+		}
+	}
+	duration := time.Since(startTime)
+	fmt.Printf("İşlem süresi: %d dakika %d saniye.\n", int(duration.Minutes()), int(duration.Seconds())%60)
 	return nil
 }
 
@@ -101,32 +99,3 @@ func parseFloat(s string) float64 {
 }
 
 // formatNumber fonksiyonu, sayıyı istediğiniz formatta döndürür
-func formatNumber(num float64) string {
-	// Sayıyı tam sayıya dönüştür
-	intValue := int64(num)
-	decimalPart := num - float64(intValue)
-
-	// Tam sayı kısmını formatla
-	strDecimal := fmt.Sprintf("%.2f", decimalPart)[2:] // Ondalık kısmını al
-
-	// Tam sayının formatlanması (milyon.bin.yüz)
-	million := intValue / 1000000
-	remaining := intValue % 1000000
-	var formatted string
-	if million > 0 {
-		formatted += strconv.FormatInt(million, 10) + "."
-	}
-
-	// Kalan kısmı formatla
-	if remaining > 0 {
-		// Başındaki sıfırları kaldırmak için 3 basamaklı format
-		formatted += fmt.Sprintf("%d.%03d", remaining/1000, remaining%1000)
-	} else if million == 0 { // Eğer milyon yoksa kalan kısmı da göstermek için
-		formatted += fmt.Sprintf("%03d.000", remaining)
-	}
-
-	// Kuruş kısmını ekle
-	formatted += "," + strDecimal
-
-	return formatted
-}
