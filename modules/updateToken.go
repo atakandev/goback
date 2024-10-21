@@ -9,12 +9,22 @@ import (
 )
 
 func updatePrice(db *sql.DB, price float64, tokenAddress string) error {
+	// Güncel zamanı alıyoruz
+	currentTime := time.Now().Format(time.RFC3339)
+
+	// Sorgu: nowprice değerini güncelle ve history sütununa yeni fiyat ve tarih ekle
 	query := `
 		UPDATE public.tokens
-		SET nowprice = $1
-		WHERE address = $2
+		SET nowprice = $1,
+		    history = COALESCE(
+		        history || jsonb_build_array(jsonb_build_object('price', to_json($2::numeric), 'date', to_json($3::text))),
+		        jsonb_build_array(jsonb_build_object('price', to_json($2::numeric), 'date', to_json($3::text)))
+		    )
+		WHERE address = $4
 	`
-	_, err := db.Exec(query, price, tokenAddress)
+
+	// Sorguyu çalıştır
+	_, err := db.Exec(query, price, price, currentTime, tokenAddress)
 	return err
 }
 

@@ -110,7 +110,9 @@ func Raydium(mintAddress string) (*TokenData, error) {
 			if !exists {
 				return nil, fmt.Errorf("price not found for mint address: %s", mintAddress)
 			}
-
+			if data.Name == "Slurp" {
+				fmt.Printf("token: %s, raydium price: %.9f \n", data.Name, price)
+			}
 			return &TokenData{
 				TokenName: data.Name,
 				Symbol:    data.Symbol,

@@ -14,7 +14,7 @@ import (
 
 func main() {
 	// PostgreSQL bağlantısını ayarlıyoruz
-	connStr := "DB"
+	connStr := "DB CONNECTION STRING"
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatalf("Veritabanı bağlantı hatası: %v", err)
@@ -36,21 +36,29 @@ func main() {
 	defer ticker.Stop()
 
 	// Null kontrol işlemini ayrı bir goroutine içinde başlatıyoruz
-	go func() {
-		for {
-			fmt.Println("Null Token Kontrol Başladı")
-			modules.NullControl(db) // modules paketinden NullControl fonksiyonunu çağırıyoruz
-			<-ticker.C
-		}
-	}()
-
-	// Auto price işlemini ayrı bir goroutine içinde başlatıyoruz
+	//go func() {
+	//	for {
+	//		fmt.Println("Null Token Kontrol Başladı")
+	//		modules.NullControl(db) // modules paketinden NullControl fonksiyonunu çağırıyoruz
+	//		<-ticker.C
+	//	}
+	//}()
+	//
+	//// Auto price işlemini ayrı bir goroutine içinde başlatıyoruz
+	//go func() {
+	//	ticker2 := time.NewTicker(2 * time.Minute)
+	//	defer ticker2.Stop()
+	//	for {
+	//		fmt.Println("Token Fiyat Kontrol Başladı")
+	//		modules.AutoPrice(db) // modules paketinden AutoPrice fonksiyonunu çağırıyoruz
+	//		<-ticker2.C
+	//	}
+	//}()
 	go func() {
 		ticker2 := time.NewTicker(2 * time.Minute)
 		defer ticker2.Stop()
 		for {
-			fmt.Println("Token Fiyat Kontrol Başladı")
-			modules.AutoPrice(db) // modules paketinden AutoPrice fonksiyonunu çağırıyoruz
+			modules.UpdateWallets(db) // modules paketinden AutoPrice fonksiyonunu çağırıyoruz
 			<-ticker2.C
 		}
 	}()
