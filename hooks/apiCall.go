@@ -174,14 +174,24 @@ func Geckoterminal(mintAddress string) (*TokenData, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
-
+	// Yanıtın başarılı olup olmadığını kontrol edin
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("API isteği başarısız oldu: %s", resp.Status)
+	}
+	//bodyBytes, err := io.ReadAll(resp.Body)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//
+	//// Yanıt gövdesini konsola yazdırın
+	//fmt.Println("API yanıtı:", string(bodyBytes))
 	var tokenData struct {
 		Data struct {
 			Attributes struct {
 				Name     string  `json:"name"`
 				Symbol   string  `json:"symbol"`
 				ImageURL *string `json:"image_url"`
-				PriceUsd float64 `json:"price_usd"`
+				PriceUsd string  `json:"price_usd"`
 			} `json:"attributes"`
 		} `json:"data"`
 	}
@@ -189,12 +199,16 @@ func Geckoterminal(mintAddress string) (*TokenData, error) {
 	if err := json.NewDecoder(resp.Body).Decode(&tokenData); err != nil {
 		return nil, err
 	}
-
 	return &TokenData{
 		TokenName: tokenData.Data.Attributes.Name,
 		Symbol:    tokenData.Data.Attributes.Symbol,
 		Logo:      tokenData.Data.Attributes.ImageURL,
-		PriceUsd:  tokenData.Data.Attributes.PriceUsd,
+		PriceUsd:  parsePrice(tokenData.Data.Attributes.PriceUsd),
 		API:       "geckoterminal",
 	}, nil
+}
+
+func parsePrice(price string) float64 {
+	priceFloat, _ := strconv.ParseFloat(price, 64)
+	return priceFloat
 }

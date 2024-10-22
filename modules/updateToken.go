@@ -32,7 +32,7 @@ func updatePrice(db *sql.DB, price float64, tokenAddress string) error {
 func AutoPrice(db *sql.DB) {
 	startTime := time.Now()
 
-	rows, err := db.Query("SELECT address, api FROM public.tokens;")
+	rows, err := db.Query("SELECT address, api, tokenname FROM public.tokens;")
 	if err != nil {
 		log.Fatalf("Veritabanı hatası: %v", err)
 	}
@@ -42,8 +42,8 @@ func AutoPrice(db *sql.DB) {
 	const maxTokens = 1500
 
 	for rows.Next() {
-		var address, api string
-		if err := rows.Scan(&address, &api); err != nil {
+		var address, api, tokenname string
+		if err := rows.Scan(&address, &api, &tokenname); err != nil {
 			log.Fatalf("Satır okuma hatası: %v", err)
 		}
 
@@ -64,10 +64,10 @@ func AutoPrice(db *sql.DB) {
 		default:
 			tokenData, err = hooks.Dexscreener(address)
 		}
-
 		if err != nil {
 			continue
 		}
+
 		if tokenData != nil && tokenData.PriceUsd > 0 {
 			err = updatePrice(db, tokenData.PriceUsd, address) // updatePrice fonksiyonunu uygun şekilde tanımlayın
 			if err != nil {
