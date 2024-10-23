@@ -66,6 +66,10 @@ func UpdateWallets(db *sql.DB) error {
 			}
 			portfolioTotalUsd += nowPrice * parseFloat(token.TokenAmount)
 		}
+		if portfolioTotalUsd == 0.0 {
+			fmt.Printf("Wallet %s has no token balance to update.\n", wallet.Wallet)
+			continue
+		}
 		// Tarih bilgisi
 		currentDate := time.Now().Format("2006-01-02T15:04:05Z07:00") // ISO 8601 formatında tarih
 		price := portfolioTotalUsd                                    // Burada istediğiniz fiyatı kullanabilirsiniz
