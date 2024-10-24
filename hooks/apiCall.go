@@ -75,6 +75,7 @@ func Raydium(mintAddress string) (*TokenData, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		defer tokenDataResponse.Body.Close()
 
 		var tokenData struct {
@@ -96,6 +97,7 @@ func Raydium(mintAddress string) (*TokenData, error) {
 			if err != nil {
 				return nil, err
 			}
+
 			defer priceResponse.Body.Close()
 
 			var priceData struct {
@@ -107,17 +109,19 @@ func Raydium(mintAddress string) (*TokenData, error) {
 
 			// Fiyatı al
 			price, exists := priceData.Data[mintAddress]
+			fmt.Printf("token address: %s \n", mintAddress)
+			priceStr := fmt.Sprintf("%f", price)
+			fmt.Print(priceStr)
+			fmt.Printf("\n")
+
 			if !exists {
 				return nil, fmt.Errorf("price not found for mint address: %s", mintAddress)
-			}
-			if data.Name == "Slurp" {
-				fmt.Printf("token: %s, raydium price: %.9f \n", data.Name, price)
 			}
 			return &TokenData{
 				TokenName: data.Name,
 				Symbol:    data.Symbol,
 				Logo:      data.LogoURI,
-				PriceUsd:  price,
+				PriceUsd:  parsePrice(priceStr),
 				API:       "raydium",
 			}, nil
 		}
