@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math"
 	"strconv"
 	"time"
 )
@@ -64,8 +65,15 @@ func UpdateWallets(db *sql.DB) error {
 			if err != nil {
 				continue
 			}
-			portfolioTotalUsd += nowPrice * parseFloat(token.TokenAmount)
+
+			// NaN kontrolü
+			if math.IsNaN(nowPrice) {
+				portfolioTotalUsd += 0.0
+			} else {
+				portfolioTotalUsd += nowPrice * parseFloat(token.TokenAmount)
+			}
 		}
+
 		if portfolioTotalUsd == 0.0 {
 			fmt.Printf("Wallet %s has no token balance to update.\n", wallet.Wallet)
 			continue

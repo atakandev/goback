@@ -14,7 +14,7 @@ import (
 
 func main() {
 	// PostgreSQL bağlantısını ayarlıyoruz
-	connStr := "DB CONNECTION"
+	connStr := "DB CONNECTION STRING"
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatalf("Veritabanı bağlantı hatası: %v", err)
