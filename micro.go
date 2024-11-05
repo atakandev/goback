@@ -5,7 +5,11 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+
+	"os"
 	"time"
+
+	"github.com/joho/godotenv"
 
 	_ "github.com/lib/pq"
 
@@ -14,7 +18,21 @@ import (
 
 func main() {
 	// PostgreSQL bağlantısını ayarlıyoruz
-	connStr := "DB CONNECTION STRING"
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Println(".env dosyası yüklenemedi")
+	}
+
+	// Çevre değişkenlerini aldıktan sonra bağlantı dizesini ayarlayın
+	user := os.Getenv("DB_USER")
+	host := os.Getenv("DB_HOST")
+	dbname := os.Getenv("DB_NAME")
+	password := os.Getenv("DB_PASSWORD")
+	port := os.Getenv("DB_PORT")
+
+	connStr := fmt.Sprintf("host=%s user=%s dbname=%s password=%s port=%s sslmode=disable", host, user, dbname, password, port)
+
+	// Bağlantıyı oluşturun
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatalf("Veritabanı bağlantı hatası: %v", err)
@@ -28,8 +46,6 @@ func main() {
 	if err := db.PingContext(ctx); err != nil {
 		log.Fatalf("Bağlantı doğrulama hatası: %v", err)
 	}
-
-	fmt.Println("Bağlantı başarılı!")
 
 	// Ticker'ları ayarlıyoruz
 	ticker := time.NewTicker(5 * time.Minute)
