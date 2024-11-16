@@ -178,13 +178,6 @@ func Geckoterminal(mintAddress string) (*TokenData, error) {
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("API isteği başarısız oldu: %s", resp.Status)
 	}
-	//bodyBytes, err := io.ReadAll(resp.Body)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//// Yanıt gövdesini konsola yazdırın
-	//fmt.Println("API yanıtı:", string(bodyBytes))
 	var tokenData struct {
 		Data struct {
 			Attributes struct {
@@ -207,7 +200,51 @@ func Geckoterminal(mintAddress string) (*TokenData, error) {
 		API:       "geckoterminal",
 	}, nil
 }
+func SolscanMeta(mintAddress string) (*TokenData, error) {
+	// API isteği için gerekli URL ve başlıklar
+	url := fmt.Sprintf("https://pro-api.solscan.io/v1.0/token/meta?tokenAddress=%s", mintAddress)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
 
+	// Token içeren başlık ekleme
+	req.Header.Set("token", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjcmVhdGVkQXQiOjE3MTk5Mjc0MDE4OTcsImVtYWlsIjoiY3J5cHRvZGV2QGJ1bGxzYW1hLmNvbSIsImFjdGlvbiI6InRva2VuLWFwaSIsImlhdCI6MTcxOTkyNzQwMX0.TNl1Cs0BfQNHD9smDubyjXEPN-zFWcVZ2yLUWX99szI")
+
+	// HTTP istemcisini kullanarak isteği gönder
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	// Yanıtın başarılı olup olmadığını kontrol et
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("API isteği başarısız oldu: %s", resp.Status)
+	}
+
+	// JSON verisini çözümle
+	var tokenData struct {
+		Name   string  `json:"name"`
+		Symbol string  `json:"symbol"`
+		Icon   *string `json:"icon"`
+		Price  float64 `json:"price"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&tokenData); err != nil {
+		return nil, err
+	}
+
+	// Sonuçları TokenData yapısına dönüştür
+	return &TokenData{
+		TokenName: tokenData.Name,
+		Symbol:    tokenData.Symbol,
+		Logo:      tokenData.Icon,
+		PriceUsd:  tokenData.Price,
+		API:       "solscan",
+	}, nil
+}
 func parsePrice(price string) float64 {
 	priceFloat, _ := strconv.ParseFloat(price, 64)
 	return priceFloat

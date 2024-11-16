@@ -39,7 +39,7 @@ func AutoPrice(db *sql.DB) {
 	defer rows.Close()
 
 	var counter int
-	const maxTokens = 1500
+	const maxTokens = 4500
 
 	for rows.Next() {
 		var address, api, tokenname string
@@ -61,8 +61,10 @@ func AutoPrice(db *sql.DB) {
 			tokenData, err = hooks.Jup(address)
 		case "geckoterminal":
 			tokenData, err = hooks.Geckoterminal(address)
+		case "solscan":
+			tokenData, err = hooks.SolscanMeta(address)
 		default:
-			tokenData, err = hooks.Dexscreener(address)
+			tokenData, err = hooks.SolscanMeta(address)
 		}
 		if err != nil {
 			continue
@@ -79,5 +81,5 @@ func AutoPrice(db *sql.DB) {
 
 	// İşlem süresini hesapla
 	duration := time.Since(startTime)
-	fmt.Printf("İşlem süresi: %d dakika %d saniye.\n", int(duration.Minutes()), int(duration.Seconds())%60)
+	fmt.Printf("Token Fiyat İşlem süresi: %d dakika %d saniye.\n", int(duration.Minutes()), int(duration.Seconds())%60)
 }
